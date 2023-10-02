@@ -7,6 +7,7 @@ import { connectDB } from './database/connection.js';
 
 // routes import
 import productRoute from './routes/productRoute.js';
+import userRoute from './routes/userRoute.js';
 
 
 const server = express()
@@ -27,6 +28,7 @@ server.use(
 
 // routes
 server.use("/api/products", productRoute);
+server.use("/api/user", userRoute);
 
 server.get("/", (req, res)=>[
     res.send("Saniyaj from backend")
