@@ -3,6 +3,7 @@ class ApiFeatures {
         this.query = query;
         this.queryStr = queryStr;
     }
+    
 
     search() {
         const keyword = this.queryStr.keyword
@@ -37,6 +38,7 @@ class ApiFeatures {
 
     pagination(resultPerPage) {
         const currentPage = Number(this.queryStr.page) || 1;
+        
 
         const skip = resultPerPage * (currentPage - 1);
 
