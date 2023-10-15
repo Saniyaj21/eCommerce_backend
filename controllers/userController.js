@@ -1,11 +1,18 @@
 import { User } from '../models/userModels.js';
 import sendToken from '../utils/jwtToken.js';
 import { sendEmail } from '../utils/sendEmail.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 export const register = async (req, res) => {
 
     try {
         const { name, email, password } = req.body
+
+        const myCloud = await cloudinary.uploader.upload(req.body.avatar, {
+            folder: "sampleFolder",
+            width: 150,
+            crop: "scale",
+        });
 
         //if user exists return error
         let user = await User.findOne({ email })  // shortHand for email:email
@@ -18,10 +25,11 @@ export const register = async (req, res) => {
             email,
             password,
             avatar: {
-                public_id: "profile pic",
-                url: "https://i.dummyjson.com/data/products/1/1.jpg"
+                public_id:myCloud.public_id,
+                url:myCloud.secure_url
             }
         });
+        
 
 
         sendToken(user, 201, res)
@@ -39,19 +47,14 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
 
     try {
+
         const { email, password } = req.body
 
         // checking if user has given password and email both
 
-        if (!email || !password) {
-            return res.status(400)
-                .json({
-                    success: false,
-                    message: "Please Enter Email & Password."
-                })
-        }
-
+        
         const user = await User.findOne({ email }).select("+password");
+
         if (!user) {
             return res.status(400)
                 .json({
@@ -59,6 +62,7 @@ export const login = async (req, res) => {
                     message: "Invalid email or password"
                 })
         }
+        
         const isPasswordMatched = await user.comparePassword(password);
 
         if (!isPasswordMatched) {
@@ -68,6 +72,7 @@ export const login = async (req, res) => {
                     message: "Invalid email or password"
                 })
         }
+      
         // successful login
         sendToken(user, 200, res)
 
@@ -82,6 +87,7 @@ export const login = async (req, res) => {
 // logout
 
 export const logout = async (req, res, next) => {
+    
     res.cookie("token", null, {
         expires: new Date(Date.now()),
         httpOnly: true,
@@ -315,13 +321,13 @@ export const updateUserRole = async (req, res) => {
             // name: req.body.name,
             // email: req.body.email,
             role: req.body.role,
-          };
-        
-          await User.findByIdAndUpdate(req.params.id, newUserData, {
+        };
+
+        await User.findByIdAndUpdate(req.params.id, newUserData, {
             new: true,
             runValidators: true,
             useFindAndModify: false,
-          });
+        });
         res.status(200).json({
             success: true,
         });
@@ -336,7 +342,7 @@ export const updateUserRole = async (req, res) => {
 export const deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
-        
+
         res.status(200).json({
             success: true,
             message: "User Deleted Successfully",
