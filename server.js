@@ -5,7 +5,7 @@ import { connectDB } from './database/connection.js';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import fileUpload from 'express-fileupload';
-import {v2 as cloudinary} from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import session from 'express-session';
 
 
@@ -22,9 +22,9 @@ const server = express()
 connectDB()
 
 // cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
@@ -41,20 +41,20 @@ server.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB (adjust this as needed)
 }));
 server.use(
-    cors({
-      origin:process.env.FRONTEND_URL ,
-      exposedHeaders: ['X-Total-Count'],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-      credentials: true,
-    })
-  );
+  cors({
+    origin: process.env.FRONTEND_URL,
+    exposedHeaders: ['X-Total-Count'],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  })
+);
 server.use(
   session({
     secret: process.env.SESSION_KEY,
     resave: false, // don't save session if unmodified
     saveUninitialized: false, // don't create session until something stored
   })
-  );
+);
 
 
 // routes
@@ -62,13 +62,13 @@ server.use("/api/products", productRoute);
 server.use("/api/user", userRoute);
 server.use("/api/order", orderRoute);
 
-server.get("/", (req, res)=>[
-    res.send("Saniyaj from backend")
+server.get("/", (req, res) => [
+  res.send("Saniyaj from backend")
 ])
 
 
 
 
-server.listen(process.env.PORT, ()=>{
-    console.log(`Server is running on ${process.env.PORT}`)
+server.listen(process.env.PORT, () => {
+  console.log(`Server is running on ${process.env.PORT}`)
 })

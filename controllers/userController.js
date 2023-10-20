@@ -25,11 +25,11 @@ export const register = async (req, res) => {
             email,
             password,
             avatar: {
-                public_id:myCloud.public_id,
-                url:myCloud.secure_url
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url
             }
         });
-        
+
 
 
         sendToken(user, 201, res)
@@ -52,7 +52,7 @@ export const login = async (req, res) => {
 
         // checking if user has given password and email both
 
-        
+
         const user = await User.findOne({ email }).select("+password");
 
         if (!user) {
@@ -62,7 +62,7 @@ export const login = async (req, res) => {
                     message: "Invalid email or password"
                 })
         }
-        
+
         const isPasswordMatched = await user.comparePassword(password);
 
         if (!isPasswordMatched) {
@@ -72,7 +72,7 @@ export const login = async (req, res) => {
                     message: "Invalid email or password"
                 })
         }
-      
+
         // successful login
         sendToken(user, 200, res)
 
@@ -87,11 +87,14 @@ export const login = async (req, res) => {
 // logout
 
 export const logout = async (req, res, next) => {
-    
+
     res.cookie("token", null, {
-        expires: new Date(Date.now()),
+        maxAge: new Date(Date.now()),
         httpOnly: true,
-    });
+        sameSite: "None",
+        secure: true
+    })
+
 
     res.status(200).json({
         success: true,
