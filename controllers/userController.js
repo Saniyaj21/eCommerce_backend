@@ -10,7 +10,7 @@ export const register = async (req, res) => {
 
         const myCloud = await cloudinary.uploader.upload(req.body.avatar, {
             folder: "sampleFolder",
-            width: 150,
+            width: 250,
             crop: "scale",
         });
 
@@ -214,6 +214,7 @@ export const getUserDetails = async (req, res, next) => {
 export const updatePassword = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select("+password");
+       
 
         const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
 
@@ -258,6 +259,28 @@ export const updateProfile = async (req, res) => {
             name: req.body.name,
             email: req.body.email,
         };
+
+        let prefix = "https://res.cloudinary.com";
+
+        if (!req.body.avatar.startsWith(prefix)) {
+            const user = await User.findById(req.user.id);
+
+            const imageId = user.avatar.public_id;
+
+            await cloudinary.uploader.destroy(imageId);
+
+            const myCloud = await cloudinary.uploader.upload(req.body.avatar, {
+                folder: "sampleFolder",
+                width: 250,
+                crop: "scale",
+            });
+
+            newUserData.avatar = {
+                public_id: myCloud.public_id,
+                url: myCloud.secure_url,
+            };
+        }
+
         const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
             new: true,
             runValidators: true,
@@ -266,6 +289,7 @@ export const updateProfile = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            user
         });
 
     } catch (error) {
