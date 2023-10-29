@@ -14,6 +14,8 @@ import session from 'express-session';
 import productRoute from './routes/productRoute.js';
 import userRoute from './routes/userRoute.js';
 import orderRoute from './routes/orderRoute.js';
+import cartRoute from './routes/cartRoute.js';
+import paymentRoute from './routes/paymentRoute.js';
 
 
 const server = express()
@@ -61,6 +63,8 @@ server.use(
 server.use("/api/products", productRoute);
 server.use("/api/user", userRoute);
 server.use("/api/order", orderRoute);
+server.use("/api/cart", cartRoute);
+server.use("/api/payment", paymentRoute);
 
 server.get("/", (req, res) => [
   res.send("Saniyaj from backend")

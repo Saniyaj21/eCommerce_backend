@@ -4,9 +4,10 @@ import { Product } from '../models/product.js';
 
 export const newOrder = async (req, res) => {
     try {
+
         const {
             shippingInfo,
-            orderItems,
+            // orderItems,
             paymentInfo,
             itemsPrice,
             taxPrice,
@@ -15,6 +16,26 @@ export const newOrder = async (req, res) => {
         } = req.body;
 
 
+        const orderItemsData = req.body.orderItems;
+
+        // Create an array to store the order items
+        const orderItems = [];
+        
+        // Iterate over the orderItemsData array and create individual order item objects
+        for (const itemData of orderItemsData) {
+          const orderItem = {
+            name: itemData.product.name,
+            price: itemData.product.price,
+            quantity: itemData.quantity,
+            image: itemData.product.images[0].url,
+            product: itemData.product._id, // Assuming this is the product _id
+          };
+        
+          // Push the order item object into the orderItems array
+          orderItems.push(orderItem);
+        }
+
+        console.log(orderItems)
         const order = await Order.create({
             shippingInfo,
             orderItems,
@@ -70,6 +91,8 @@ export const getSingleOrder = async (req, res) => {
 // get logged in user  Orders
 export const myOrders = async (req, res) => {
     try {
+
+        console.log("llllooo");
         const orders = await Order.find({ user: req.user._id });
 
         if (!orders) {
@@ -78,6 +101,8 @@ export const myOrders = async (req, res) => {
                 message: "no order found"
             });
         }
+
+      
 
         res.status(201).json({
             success: true,
@@ -173,7 +198,7 @@ async function updateStock(id, quantity) {
 // delete Order -- Admin
 export const deleteOrder = async (req, res) => {
     try {
-        const order = await Order.findOneAndDelete({_id:req.params.id});
+        const order = await Order.findOneAndDelete({ _id: req.params.id });
 
         if (!order) {
             res.status(404).json({
