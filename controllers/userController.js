@@ -214,7 +214,7 @@ export const getUserDetails = async (req, res, next) => {
 export const updatePassword = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select("+password");
-       
+
 
         const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
 
@@ -368,7 +368,14 @@ export const updateUserRole = async (req, res) => {
 // delete User Role -- Admin
 export const deleteUser = async (req, res) => {
     try {
+
+
+
         const user = await User.findByIdAndDelete(req.params.id);
+        const imageId = user.avatar.public_id;
+
+        await cloudinary.uploader.destroy(imageId);
+
 
         res.status(200).json({
             success: true,

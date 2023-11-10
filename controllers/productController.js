@@ -2,6 +2,7 @@ import { Product } from '../models/product.js';
 import catchAsyncErrors from '../middleware/catchAsyncErrors.js'
 import ApiFeatures from '../utils/apifeatures.js';
 
+import { v2 as cloudinary } from 'cloudinary';
 
 
 
@@ -19,7 +20,7 @@ export const getAllProduct = async (req, res) => {
     try {
         const resultPerPage = 8;
         const productsCount = await Product.countDocuments();
-       
+
         const apiFeature = new ApiFeatures(Product.find(), req.query)
             .search()
             .filter()
@@ -48,11 +49,37 @@ export const getAllProduct = async (req, res) => {
 // Create Product -- Admin
 export const createProduct = async (req, res) => {
     try {
+        let images = [];
+        if (typeof req.body.images === "string") {
+            images.push(req.body.images);
+        } else {
+            images = req.body.images;
+        }
+
+
+        const imagesLinks = [];
+
+        for (let i = 0; i < images.length; i++) {
+
+            const result = await cloudinary.uploader.upload(images[i], {
+                folder: "sampleFolder",
+            });
+
+
+            imagesLinks.push({
+                public_id: result.public_id,
+                url: result.secure_url,
+            });
+        }
+
+        req.body.images = imagesLinks;
         req.body.user = req.user.id;
-        await Product.create(req.body);
+
+        const product = await Product.create(req.body);
 
         res.status(201).json({
             success: true,
+            product,
             message: "product added Successfully",
         });
     } catch (error) {
@@ -103,7 +130,49 @@ export const updateProduct = catchAsyncErrors(
     async (req, res) => {
         const { id } = req.params
         try {
-            const product = await Product.findOneAndUpdate({ _id: id }, req.body, { new: true }) // return updated product
+            let product = await Product.findById(req.params.id);
+
+
+            // Images Start Here
+            let images = [];
+
+            if (typeof req.body.images === "string") {
+                images.push(req.body.images);
+            } else {
+                images = req.body.images;
+            }
+
+            if (images !== undefined) {
+                // Deleting Images From Cloudinary
+                for (let i = 0; i < product.images.length; i++) {
+                    await cloudinary.uploader.destroy(product.images[i].public_id);
+                }
+
+                const imagesLinks = [];
+
+                for (let i = 0; i < images.length; i++) {
+                    const result = await cloudinary.uploader.upload(images[i], {
+                        folder: "sampleFolder",
+                    });
+
+                    imagesLinks.push({
+                        public_id: result.public_id,
+                        url: result.secure_url,
+                    });
+                }
+
+                req.body.images = imagesLinks;
+            }
+
+
+            product = await Product.findOneAndUpdate({ _id: id }, req.body, { new: true }) // return updated product
+
+
+
+
+
+
+
             res.status(200).json(
                 {
                     success: true,
@@ -125,7 +194,14 @@ export const updateProduct = catchAsyncErrors(
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params
+
         const product = await Product.findOneAndDelete({ _id: id })
+
+        // Deleting Images From Cloudinary
+        for (let i = 0; i < product.images.length; i++) {
+            await cloudinary.uploader.destroy(product.images[i].public_id);
+        }
+
         res.status(200).json({
             success: true,
             product,
@@ -209,12 +285,12 @@ export const getProductReviews = async (req, res) => {
 export const deleteReview = async (req, res) => {
 
     try {
-       
+
         const productId = req.query.productId
-    
+
 
         const product = await Product.findById({ _id: productId })
-        
+
         if (!product) {
             return res.status(400).json({
                 success: false,
