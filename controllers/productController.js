@@ -269,6 +269,7 @@ export const getProductReviews = async (req, res) => {
 
         const product = await Product.findById({ _id: id })
 
+
         res.status(200).json({
             success: true,
             reviews: product.reviews,
@@ -330,10 +331,10 @@ export const deleteReview = async (req, res) => {
                 useFindAndModify: false,
             }
         );
-
+        
         res.status(200).json({
             success: true,
-            reviews: product.reviews,
+            reviews: reviews,
         })
     } catch (error) {
         res.status(400).json({

@@ -65,7 +65,8 @@ export const getSingleOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id).populate(
             "user",
-            "name email"
+            "name email",
+           
         );
 
 
@@ -119,6 +120,7 @@ export const myOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find();
+      
 
         let totalAmount = 0;
 
@@ -141,7 +143,10 @@ export const getAllOrders = async (req, res) => {
 // update Order Status -- Admin
 export const updateOrder = async (req, res) => {
     try {
+        console.log(req.body);
         const order = await Order.findById(req.params.id);
+
+        console.log(order);
 
         if (!order) {
             return res.status(404).json({
