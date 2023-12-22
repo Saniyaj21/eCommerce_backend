@@ -37,7 +37,7 @@ server.use(bodyParser.json({ limit: '50mb' }));
 // Increase the request size limit for URL-encoded data
 server.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-server.use(express.json());
+server.use(express.json({ limit: '20mb' }));
 server.use(cookieParser());
 server.use(fileUpload({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB (adjust this as needed)
