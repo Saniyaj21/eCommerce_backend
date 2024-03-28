@@ -2,11 +2,13 @@ import { User } from '../models/userModels.js';
 import sendToken from '../utils/jwtToken.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import { v2 as cloudinary } from 'cloudinary';
+import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
 
     try {
         const { name, email, password } = req.body
+   
 
         const myCloud = await cloudinary.uploader.upload(req.body.avatar, {
             folder: "sampleFolder",
@@ -29,11 +31,17 @@ export const register = async (req, res) => {
                 url: myCloud.secure_url
             }
         });
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET,);
+
+        user.token = token;
+        user.save();
 
 
-
-        sendToken(user, 201, res)
-
+        res.status(200).json({
+            success: true,
+            token,
+            user,
+        });
 
     } catch (error) {
         res.status(400).json({
@@ -49,32 +57,42 @@ export const login = async (req, res) => {
     try {
 
         const { email, password } = req.body
-
+        
         // checking if user has given password and email both
-
-
+        
+        
         const user = await User.findOne({ email }).select("+password");
-
+        
         if (!user) {
             return res.status(400)
-                .json({
-                    success: false,
-                    message: "Invalid email or password"
-                })
+            .json({
+                success: false,
+                message: "Invalid email or password"
+            })
         }
-
+        
         const isPasswordMatched = await user.comparePassword(password);
-
+        
         if (!isPasswordMatched) {
             return res.status(400)
-                .json({
-                    success: false,
-                    message: "Invalid email or password"
-                })
+            .json({
+                success: false,
+                message: "Invalid email or password"
+            })
         }
+        
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+        
 
-        // successful login
-        sendToken(user, 200, res)
+        user.token = token;
+        user.save();
+
+
+        res.status(200).json({
+            success: true,
+            token,
+            user
+        });
 
     } catch (error) {
         res.status(400).json({
@@ -88,18 +106,22 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res, next) => {
 
-    res.cookie("token", null, {
-        maxAge: new Date(Date.now()),
-        httpOnly: true,
-        sameSite: "None",
-        secure: true
-    })
+ try {
+    const id = req.user._id
+    const user = await User.findById(id)
 
-
+    user.token = undefined
+    user.save();
     res.status(200).json({
         success: true,
-        message: "Logged Out",
+        logOut: true,
     });
+ } catch (error) {
+    res.status(400).json({
+        success: false,
+        message: "Logged failed",
+    });
+ }
 };
 
 
@@ -182,8 +204,17 @@ export const resetPassword = async (req, res, next) => {
         // Clear the OTP and its expiration time
         user.resetPasswordOTP = undefined;
         user.resetPasswordOTPExpire = undefined;
-        await user.save();
-        sendToken(user, 200, res);
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET,);
+
+        user.token = token;
+        user.save();
+
+
+        res.status(200).json({
+            success: true,
+            token,
+            user
+        });
     } else {
         return res.status(400).json({
             success: false,
@@ -234,9 +265,17 @@ export const updatePassword = async (req, res) => {
 
         user.password = req.body.newPassword;
 
-        await user.save();
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET,);
 
-        sendToken(user, 200, res);
+        user.token = token;
+        user.save();
+    
+    
+        res.status(200).json({
+          success: true,
+          token,
+          user,
+        });
 
     } catch (error) {
         res.status(400).json({

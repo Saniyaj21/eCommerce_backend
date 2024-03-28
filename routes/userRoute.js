@@ -22,7 +22,7 @@ const router = express.Router();
 
 router.post('/register', register)
 router.post('/login', login)
-router.get('/logout', logout)
+router.get('/logout',isAuthenticatedUser, logout)
 router.post('/password/forgot', forgotPassword)
 router.patch('/password/reset', resetPassword)
 router.get('/profile', isAuthenticatedUser, getUserDetails)

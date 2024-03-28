@@ -4,20 +4,17 @@ import { User } from '../models/userModels.js';
 export const isAuthenticatedUser = async (req, res, next) => {
 
     try {
-        
-        const { token } = req.cookies;
-        // console.log(token)
 
+        const token = req.headers.token;
+        (token);
         if (!token) {
             return res.status(400).json({
                 success: false,
                 message: "You are not authenticated"
             })
         }
-        // decodedData is _id of the user that is stored in token
         const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-
-        req.user = await User.findById(decodedData.id);
+        req.user = await User.findById(decodedData._id);
 
         next();
     } catch (error) {
